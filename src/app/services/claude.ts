@@ -1,9 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 
 interface ArtifactContent {
-  type: string;
-  text?: string;
-  value?: any;
+  type: 'text' | 'json';
+  value: string | Record<string, unknown>;
 }
 
 export class ClaudeService {
@@ -15,7 +14,7 @@ export class ClaudeService {
     });
   }
 
-  async generateArtifact(prompt: string) {
+  async generateArtifact(prompt: string): Promise<ArtifactContent> {
     try {
       const message = await this.anthropic.messages.create({
         model: 'claude-3-opus-20240229',
@@ -30,8 +29,8 @@ export class ClaudeService {
 
       const content = message.content[0];
       return {
-        type: content.type,
-        value: content
+        type: 'text',
+        value: content.text
       };
     } catch (error) {
       console.error('Error generating artifact:', error);
@@ -44,7 +43,7 @@ export class ClaudeService {
       // Try to parse as JSON first
       const parsed = JSON.parse(artifactText);
       return {
-        type: typeof parsed === 'string' ? 'text' : 'json',
+        type: 'json',
         value: parsed
       };
     } catch {

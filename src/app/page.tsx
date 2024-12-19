@@ -3,10 +3,15 @@
 import { useState } from 'react';
 import { claudeService } from './services/claude';
 
+interface ArtifactContent {
+  type: 'text' | 'json';
+  value: string | Record<string, unknown>;
+}
+
 export default function Home() {
   const [prompt, setPrompt] = useState('');
   const [pastedArtifact, setPastedArtifact] = useState('');
-  const [artifact, setArtifact] = useState<any>(null);
+  const [artifact, setArtifact] = useState<ArtifactContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -18,8 +23,9 @@ export default function Home() {
     try {
       const result = await claudeService.generateArtifact(prompt);
       setArtifact(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -30,8 +36,9 @@ export default function Home() {
       const result = claudeService.parseArtifact(pastedArtifact);
       setArtifact(result);
       setError('');
-    } catch (err) {
-      setError('Failed to parse artifact. Please check the format.');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to parse artifact';
+      setError(errorMessage);
     }
   };
 
@@ -43,7 +50,7 @@ export default function Home() {
         <h2 className="text-xl font-semibold mb-2">Artifact Output:</h2>
         <div className="whitespace-pre-wrap">
           {artifact.type === 'text' ? (
-            artifact.value
+            artifact.value as string
           ) : (
             <pre className="bg-gray-800 text-white p-4 rounded overflow-auto">
               {JSON.stringify(artifact.value, null, 2)}
